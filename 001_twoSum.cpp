@@ -6,6 +6,10 @@
 //
 //你可以按任意顺序返回答案。
 
+//Tips:
+//1. 使用哈希表，可以将寻找数据的时间复杂度降低到从 O(N) 降低到 O(1)。
+//2. 注意边界值, 空指针
+
 #include <vector>
 #include <unordered_map>
 using namespace std;
@@ -19,9 +23,8 @@ vector<int> twoSum(vector<int>& nums, int target) {
 	for (int i = 0; i != sz; ++i) {
 		if (diffVal.find(target - nums[i]) == diffVal.end())
 			diffVal.insert(pair<int, int>(nums[i], i));
-		else {
+		else
 			return { diffVal[target - nums[i]], i };
-		}
 	}
 	return {};
 }
