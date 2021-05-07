@@ -56,7 +56,6 @@ class FSM {
 	string state = "start";
 
 public:
-	
 	bool isPositive = true;
 	long long ans = 0;
 
