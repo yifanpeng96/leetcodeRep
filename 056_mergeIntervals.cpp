@@ -22,7 +22,7 @@ vector<vector<int>> merge(vector<vector<int>>& intervals) {
 
 		vector<list<vector<int>>::iterator> needBeOverlapped;
 		for (auto it = ans.begin(); it != ans.end(); ++it) {
-			if (((*it)[0] <= right && (*it)[1] >= left) || ((*it)[1] >= left && (*it)[0] <= right)) {
+			if ((*it)[0] <= right && (*it)[1] >= left) {
 				(*it)[0] = min((*it)[0], left);
 				(*it)[1] = max((*it)[1], right);
 				left = (*it)[0];
