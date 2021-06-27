@@ -24,14 +24,138 @@
 //给你一个字符串 s ，如果 s 是一个 有效数字 ，请返回 true 。
 
 //Tips:
+//有限状态机, 各状态为:
+//0. 初始状态
+//1. 符号位
+//2. 整数部分
+//3. 左侧有整数的小数点
+//4. 左侧无整数的小数点
+//5. 小数部分
+//6. 字符e
+//7. 指数部分的符号位
+//8. 指数部分的整数部分
 //
+//处理转移失败的情况时，我们可以创建一个特殊的拒绝状态。如果当前状态下没有对应读入字符的「转移规则」，
+//我们就转移到这个特殊的拒绝状态。一旦自动机转移到这个特殊状态，我们就可以立即判定该字符串不「被接受」。
 
 #include <iostream>
-#include <vector>
+#include <unordered_map>
 using namespace std;
 
 -------------- 参考答案 ----------------------------------------------------------------------------------
- 
+ enum State {
+	STATE_INITIAL,            //初始状态
+	STATE_INT_SIGN,           //符号位
+	STATE_INTEGER,            //整数部分
+	STATE_POINT,              //左侧有整数的小数点
+	STATE_POINT_WITHOUT_INT,  //左侧无整数的小数点
+	STATE_FRACTION,           //小数部分
+	STATE_EXP,                //字符e/E
+	STATE_EXP_SIGN,           //指数符号
+	STATE_EXP_NUMBER          //指数数字(整数)
+};
+
+enum CharType {
+	CHAR_NUMBER,
+	CHAR_EXP,
+	CHAR_POINT,
+	CHAR_SIGN,
+	CHAR_ILLEGAL
+};
+
+CharType toCharType(char ch) {
+	if (ch >= '0' && ch <= '9')
+		return CHAR_NUMBER;
+	if (ch == 'e' || ch == 'E')
+		return CHAR_EXP;
+	if (ch == '.')
+		return CHAR_POINT;
+	if (ch == '+' || ch == '-')
+		return CHAR_SIGN;
+	return CHAR_ILLEGAL;
+}
+
+bool isNumber(string s) {
+	unordered_map<State, unordered_map<CharType, State>> transfer{
+		{
+			//初始状态只能为 0~9 or dot or +/-
+			STATE_INITIAL, {
+				{CHAR_NUMBER, STATE_INTEGER},
+				{CHAR_POINT, STATE_POINT_WITHOUT_INT},
+				{CHAR_SIGN, STATE_INT_SIGN}
+			}
+		},
+		{
+			//符号位后只能为 0~9 or dot
+			STATE_INT_SIGN, {
+				{CHAR_NUMBER, STATE_INTEGER},
+				{CHAR_POINT, STATE_POINT_WITHOUT_INT}
+			}
+	    },
+		{
+			//整数部分后只能为 0~9 or e/E or dot
+			STATE_INTEGER, {
+				{CHAR_NUMBER, STATE_INTEGER},
+				{CHAR_EXP, STATE_EXP},
+				{CHAR_POINT, STATE_POINT}
+			}
+		},
+		{
+			//左侧有整数的小数点后只能为 0~9 or e/E
+			STATE_POINT, {
+				{CHAR_NUMBER, STATE_FRACTION},
+				{CHAR_EXP, STATE_EXP}
+			}
+		}, 
+		{
+			//左侧无整数的小数点后只能为 0~9
+			STATE_POINT_WITHOUT_INT, {
+				{CHAR_NUMBER, STATE_FRACTION}
+			}
+		},
+		{
+			//小数部分后只能为 0~9 or e/E
+			STATE_FRACTION, {
+				{CHAR_NUMBER, STATE_FRACTION},
+				{CHAR_EXP, STATE_EXP}
+			}
+		}, 
+		{
+			// e/E 后只能为 0~9 or +/-
+			STATE_EXP, {
+				{CHAR_NUMBER, STATE_EXP_NUMBER},
+				{CHAR_SIGN, STATE_EXP_SIGN}
+			}
+		}, 
+		{
+			//指数符号后只能为 0~9
+			STATE_EXP_SIGN, {
+				{CHAR_NUMBER, STATE_EXP_NUMBER}
+			}
+		}, 
+		{
+			//指数数字后只能为 0~9
+			STATE_EXP_NUMBER, {
+				{CHAR_NUMBER, STATE_EXP_NUMBER}
+			}
+		}
+	};
+
+	int sz = s.size();
+	State state = STATE_INITIAL;
+
+	for (int i = 0; i != sz; ++i) {
+		CharType type = toCharType(s[i]);
+		if (transfer[state].count(type))
+			state = transfer[state][type];
+		else
+			return false;
+	}
+
+	//终止状态只能为 整数部分 or 左侧有整数的小数点 or 小数部分 or 指数数字(整数)
+	return state == STATE_INTEGER || state == STATE_POINT || state == STATE_FRACTION || state == STATE_EXP_NUMBER;
+}
+
 -------------- 自己写的 ----------------------------------------------------------------------------------
 bool is0to9(char x) {
 	if (x >= '0' && x <= '9')
