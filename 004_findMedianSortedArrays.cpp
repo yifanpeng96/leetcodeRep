@@ -62,6 +62,33 @@ double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
     }
 }
 
+//如果不考虑时间复杂度的话，用 len 表示合并后数组的长度，如果是奇数，我们需要知道第 （len+1）/2 个数就可以了，如果遍历的话需要遍历 int(len/2 ) + 1 次。
+//如果是偶数，我们需要知道第 len/2和 len/2+1 个数，也是需要遍历 len/2+1 次。所以遍历的话，奇数和偶数都是 len/2+1 次。
+
+double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
+	int sz1 = nums1.size(), sz2 = nums2.size();
+	int sz = sz1 + sz2;
+	
+	//用两个变量 left 和 right，right 保存当前循环的结果，在每次循环前将 right 的值赋给 left。
+	//这样在最后一次循环的时候，left 将得到 right 的值，也就是上一次循环的结果，接下来 right 更新为最后一次的结果。
+	int left = -1, right = -1;
+
+	//用 aStart 和 bStart 分别表示当前指向 A 数组和 B 数组的位置
+	int aStart = 0, bStart = 0;
+
+	for (int i = 0; i <= sz / 2; ++i) {
+		left = right;
+		if (aStart < sz1 && (bStart >= sz2 || nums1[aStart] < nums2[bStart]))
+			right = nums1[aStart++];
+		else
+			right = nums2[bStart++];
+	}
+	if (sz & 1)
+		return right;
+	else
+		return (left + right) / 2.0;
+}
+
 int main() {
 	
 
